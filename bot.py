@@ -1,10 +1,14 @@
+import os
 import telebot
 from telebot import types
 
-# ================== الإعدادات ==================
-BOT_TOKEN = "8477943988:AAHGgkxgobp_JIlGDsQq08LTnRZwgnDuCHs"
-BOT_PASSWORD = "1234"
-OWNER_NAME = "عبد الملك"
+# ================== الإعدادات (من Environment Variables) ==================
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_PASSWORD = os.getenv("BOT_PASSWORD")
+OWNER_NAME = os.getenv("OWNER_NAME", "عبد الملك")
+
+if not BOT_TOKEN or not BOT_PASSWORD:
+    raise ValueError("❌ BOT_TOKEN أو BOT_PASSWORD غير موجود في Environment Variables")
 
 bot = telebot.TeleBot(BOT_TOKEN, skip_pending=True)
 
@@ -113,17 +117,11 @@ def handle(message):
     if state == "WAIT_PASSWORD":
         if text == BOT_PASSWORD:
             users[user_id]["state"] = "WELCOME"
-
             bot.send_message(
                 message.chat.id,
                 f"""✔️ تم التحقق بنجاح
 
 👋 مرحبًا بك في *بوت ألفا* يا {OWNER_NAME}
-
-هذا البوت يساعدك على:
-• تنظيم المواد الدراسية
-• توليد برومتات الحل أو التقرير
-• العمل بخطوات واضحة ومنظمة
 
 ✍️ أرسل الآن اليوزر والباسورد:""",
                 parse_mode="Markdown"
@@ -139,7 +137,6 @@ def handle(message):
     if state == "WELCOME":
         users[user_id]["login"] = text
         users[user_id]["state"] = "WAIT_SUBJECT"
-
         bot.send_message(
             message.chat.id,
             "✔️ تم حفظ البيانات\n📚 اختر المادة:",
@@ -152,7 +149,6 @@ def handle(message):
         if text in SUBJECTS:
             users[user_id]["subject"] = text
             users[user_id]["state"] = "WAIT_SECTION"
-
             bot.send_message(
                 message.chat.id,
                 f"✔️ المادة المختارة: *{text}*\nاختر القسم:",
@@ -207,7 +203,6 @@ def handle(message):
     if state == "WAIT_LESSONS":
         users[user_id]["lessons"] = text
         users[user_id]["state"] = "WAIT_SECTION"
-
         bot.send_message(
             message.chat.id,
             f"""✔️ تم استلام الدروس
@@ -216,15 +211,12 @@ def handle(message):
 📚 الدروس: {text}
 
 🧠 *البرومت جاهز الآن للنسخ*
-(سيتم وضع البرومت الحقيقي لاحقًا)
-
 ⬅️ يمكنك اختيار قسم آخر أو تغيير المادة""",
             parse_mode="Markdown",
             reply_markup=kb_sections()
         )
         return
 
-
 # ================== تشغيل البوت ==================
 print("✅ بوت ألفا يعمل بثبات")
-bot.infinity_polling()
+bot.infinity_polling(skip_pending=True)
