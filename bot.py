@@ -1,6 +1,8 @@
 import os
 import telebot
 from telebot import types
+from flask import Flask
+from threading import Thread
 
 # ================== الإعدادات (من Environment Variables) ==================
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -11,6 +13,19 @@ if not BOT_TOKEN or not BOT_PASSWORD:
     raise ValueError("❌ BOT_TOKEN أو BOT_PASSWORD غير موجود في Environment Variables")
 
 bot = telebot.TeleBot(BOT_TOKEN, skip_pending=True)
+
+# ================== Flask Keep Alive ==================
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "✅ Alpha Telegram Bot is alive"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+Thread(target=run_web).start()
 
 # ================== تخزين حالة المستخدم ==================
 users = {}
